@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  php:
+    build:
+      ./php
+    ports:
+      - 80:80
+    volumes:
+      - ./src:/var/www/html
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+    environment:
+      XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1 remote_autostart=off  remote_port=9000"
+      PHP_IDE_CONFIG: "serverName=Docker"
+    networks:
+      - internal
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    ports:
+      - "8083:3306"
+    networks:
+      - internal
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links: 
+      - mysql:db
+    ports:
+      - 8765:80
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    networks:
+      - internal
+    depends_on:
+      - mysql
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.220.0/28
